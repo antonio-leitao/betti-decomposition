@@ -4,10 +4,10 @@ module sorted_list_mod
 
   type, public :: sorted_list
     private
-    integer :: num_elements
+    integer, public :: num_elements
     integer :: list_size
     integer :: element_size
-    integer, allocatable :: data(:,:)
+    integer, allocatable, public :: data(:,:)
   contains
     procedure :: binary_search
     procedure :: try_insert

@@ -9,7 +9,7 @@
   </g>
   
   <!-- Face (triangle) -->
-  <polygon points="0,0 2,3 4,0" fill="lightblue" fill-opacity="0.2" />
+  <polygon points="0,0 2,3 4,0" fill="lightblue" fill-opacity="0.5" />
   
   <!-- Vertices -->
   <g fill="black">

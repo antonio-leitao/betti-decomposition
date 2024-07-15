@@ -1,20 +1,33 @@
 program main
   use simplicial_complex_mod
+  use, intrinsic :: iso_fortran_env, only: error_unit
   implicit none
-
   type(simplicial_complex) :: sc
   character(len=100) :: filename
-
-  ! Read simplices from file
-  print *, "Enter the filename containing simplices:"
-  read *, filename
+  integer :: num_args
+  
+  ! Check if a filename was provided as a command-line argument
+  num_args = command_argument_count()
+  
+  if (num_args == 1) then
+    call get_command_argument(1, filename)
+  else if (num_args == 0) then
+    ! No argument provided, prompt user for filename
+    print *, "Enter the filename containing simplices:"
+    read *, filename
+  else
+    ! Incorrect number of arguments
+    write(error_unit,*) "Usage: ./betti [filename]"
+    stop 1
+  end if
+  
   print *, "Reading from file:", trim(filename)
-
   sc = read_simplex_file(filename)
-
+  call sc%get_boundary_matrix(2)
+  
   ! Print the simplicial complex
-  print *, "Printing the simplicial complex:"
-  call sc%print_complex()
+  ! print *, "Printing the simplicial complex:"
+  ! call sc%print_complex()
 
 contains
 
@@ -75,7 +88,7 @@ contains
         ! Read integers from the line
         read(line, *) simplex
         ! Print the integers
-        print *, 'Adding simplex: ', simplex
+        ! print *, 'Adding simplex: ', simplex
         call sc%add_simplex(simplex)
         ! Deallocate the array
         deallocate(simplex)

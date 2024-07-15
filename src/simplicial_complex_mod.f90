@@ -1,5 +1,6 @@
 module simplicial_complex_mod
   use sorted_list_mod
+  use sparse_matrix_mod, only: sparse_row, gaussian_elimination_f2
   use utils_mod, only: quick_sort
   implicit none
   private
@@ -11,6 +12,7 @@ module simplicial_complex_mod
   contains
     procedure :: initialize
     procedure :: add_simplex
+    procedure :: get_boundary_matrix
     procedure :: print_complex
   end type simplicial_complex
 
@@ -59,6 +61,54 @@ contains
     end select
   end subroutine add_simplex
 
+    subroutine get_boundary_matrix(this, k)
+      class(simplicial_complex), intent(in) :: this
+      integer, intent(in) :: k
+      integer :: m, n, i, j, l, face_index
+      type(sparse_row), allocatable :: matrix(:)
+      integer, allocatable :: temp_list(:)
+      logical :: found
+
+      ! Number of rows is number of k simplicies
+      m = this%dimensions(k)%num_elements
+      allocate(matrix(m))
+      
+      ! Allocate temp_list once
+      allocate(temp_list(k-1))
+
+
+      do i = 1, m
+        allocate(matrix(i)%indices(k))
+        ! print *, "simplex: ", this%dimensions(k)%data(:,i)
+
+        
+        !! BOUNDARY OPERATOR LOOP
+        do j = 1, k
+          l = 0
+          ! Create a temporary list excluding j-th element
+          do n = 1, k
+            if (n /= j) then
+              l = l + 1
+              temp_list(l) = this%dimensions(k)%data(n,i)
+            end if
+          end do
+          
+          ! Binary search for the face index
+          face_index = this%dimensions(k-1)%binary_search(temp_list, found)
+          
+          ! Store the face index
+          matrix(i)%indices(k-j+1) = face_index
+        end do
+      ! print *, "boundary: ", matrix(i)%indices
+
+      end do
+
+      ! Cleanup
+      deallocate(temp_list)
+      ! Further processing of matrix if needed
+      ! ...
+      deallocate(matrix)
+    end subroutine get_boundary_matrix
   ! Helper functions
 
   subroutine print_complex(this)

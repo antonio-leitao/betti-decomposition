@@ -1,8 +1,10 @@
 # Betti Decomposition
 
 ## Basic usage
+Given a a file with all simplicies of a simplicial complex:
+<img src="assets/example_complex.svg" width="300" alt="Example Simplicial Complex" align=right>
 
-Given a file that includes the simplicies of a simplicial complex:
+
 ```text
 complex.txt
   1 2 3
@@ -16,12 +18,7 @@ complex.txt
   2
   1
 ```
-
-which represents the following simplicial complex:
-
-<img src="example_complex.svg" width="300" alt="Example Simplicial Complex">
-
-the code returns the following output
+The code returns the following output
 
 ```text
 output.txt
