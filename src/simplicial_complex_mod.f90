@@ -12,7 +12,8 @@ module simplicial_complex_mod
   contains
     procedure :: initialize
     procedure :: add_simplex
-    procedure :: get_boundary_matrix
+    procedure :: boundary_matrix_rank
+    procedure :: betti_numbers
     procedure :: print_complex
   end type simplicial_complex
 
@@ -61,27 +62,35 @@ contains
     end select
   end subroutine add_simplex
 
-    subroutine get_boundary_matrix(this, k)
+    subroutine boundary_matrix_rank(this, k, rank)
       class(simplicial_complex), intent(in) :: this
       integer, intent(in) :: k
+      integer, intent(out) :: rank
       integer :: m, n, i, j, l, face_index
       type(sparse_row), allocatable :: matrix(:)
       integer, allocatable :: temp_list(:)
       logical :: found
+    ! Check for valid input
+      if (k < 0 .or. k > this%max_dim) then
+        print *, "Error: Invalid dimension k =", k
+        rank = -1  ! Indicate error
+        return
+      end if
 
-      ! Number of rows is number of k simplicies
+      ! Convention for 0-dimensional boundary map
+      if (k == 1) then
+        rank = 0
+        return
+      end if
+
       m = this%dimensions(k)%num_elements
-      allocate(matrix(m))
+      n = this%dimensions(k-1)%num_elements
       
-      ! Allocate temp_list once
+      allocate(matrix(m))
       allocate(temp_list(k-1))
-
 
       do i = 1, m
         allocate(matrix(i)%indices(k))
-        ! print *, "simplex: ", this%dimensions(k)%data(:,i)
-
-        
         !! BOUNDARY OPERATOR LOOP
         do j = 1, k
           l = 0
@@ -92,23 +101,53 @@ contains
               temp_list(l) = this%dimensions(k)%data(n,i)
             end if
           end do
-          
           ! Binary search for the face index
           face_index = this%dimensions(k-1)%binary_search(temp_list, found)
-          
+          if (.not. found) then
+            print *, "Error: Face not found for simplex", this%dimensions(k)%data(:,i)
+            rank = -1  ! Indicate error
+            return
+          end if
           ! Store the face index
           matrix(i)%indices(k-j+1) = face_index
         end do
       ! print *, "boundary: ", matrix(i)%indices
-
       end do
-
       ! Cleanup
       deallocate(temp_list)
-      ! Further processing of matrix if needed
-      ! ...
+      call gaussian_elimination_f2(matrix, m, n, rank)
       deallocate(matrix)
-    end subroutine get_boundary_matrix
+      print *, "Dimension: ",k, "Shape: ",m,n,"Rank: ",rank 
+    end subroutine boundary_matrix_rank
+
+subroutine betti_numbers(this)
+    class(simplicial_complex), intent(inout) :: this
+    integer :: i, K, rank_k, rank_k1
+    integer, allocatable :: betti(:), ranks(:)
+    
+    allocate(betti(this%max_dim))
+    allocate(ranks(this%max_dim))
+    
+    ! Calculate ranks in descending order
+    ranks(1) = 0  ! By convention, rank of boundary map for 0-simplices is 0
+    do i = this%max_dim, 1, -1
+        call this%boundary_matrix_rank(i, ranks(i))
+    end do
+    
+    ! Calculate Betti numbers
+    do i = 1, this%max_dim
+        K = this%dimensions(i)%num_elements
+        betti(i) = K - (ranks(i) + ranks(i+1))
+    end do
+
+    ! Print Betti numbers
+    do i = 1, this%max_dim
+        print *, "b", i-1, " = ", betti(i)
+    end do
+
+    deallocate(betti)
+    deallocate(ranks)
+end subroutine betti_numbers
   ! Helper functions
 
   subroutine print_complex(this)

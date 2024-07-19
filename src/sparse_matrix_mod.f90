@@ -14,7 +14,7 @@ contains
     integer, intent(in) :: m, n
     integer, intent(out) :: rank
     
-    integer :: h, k, i, j, pivot_row
+    integer :: h, k, i, pivot_row
     logical :: found_pivot
     
     h = 1  ! Current pivot row
