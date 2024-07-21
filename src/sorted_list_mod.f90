@@ -11,6 +11,7 @@ module sorted_list_mod
     procedure :: binary_search
     procedure :: try_insert
     procedure :: initialize
+    procedure :: cleanup
     procedure :: print_list
   end type sorted_list
 contains
@@ -86,6 +87,12 @@ contains
     this%num_elements = this%num_elements + 1
     status = 0  ! Successfully inserted
   end function try_insert
+
+  !HELPER STUFF
+  subroutine cleanup(this)
+    class(sorted_list), intent(inout) :: this
+    if (allocated(this%data)) deallocate(this%data)
+  end subroutine cleanup
 
   subroutine print_list(this)
     class(sorted_list), intent(in) :: this

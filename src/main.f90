@@ -5,7 +5,8 @@ program main
   type(simplicial_complex) :: sc
   character(len=100) :: filename
   integer :: num_args
-  
+  real(kind=8) :: start_time, end_time, elapsed_time
+
   ! Check if a filename was provided as a command-line argument
   num_args = command_argument_count()
   
@@ -24,12 +25,14 @@ program main
   print *, "Reading from file:", trim(filename)
   sc = read_simplex_file(filename)
   ! call sc%print_complex()
+  call cpu_time(start_time)
   call sc%betti_numbers()
-  
-  ! Print the simplicial complex
-  ! print *, "Printing the simplicial complex:"
-  ! call sc%print_complex()
+  call cpu_time(end_time)
 
+  ! Calculate and print the elapsed time
+  print *, "----------"
+  elapsed_time = end_time-start_time
+  print *, "Elapsed time: ", human_readable_time(elapsed_time)
 contains
 
   function read_simplex_file(filename) result(sc)
@@ -110,5 +113,25 @@ contains
           end if
       end do
   end function count_integers_in_line
+
+  function human_readable_time(seconds) result(time_string)
+    real(kind=8), intent(in) :: seconds  ! Using double precision for higher accuracy
+    character(len=50) :: time_string
+    integer :: secs, msecs, usecs
+
+    secs = int(seconds)
+    msecs = int((seconds - secs) * 1000)
+    usecs = nint((seconds - secs - msecs/1000.0) * 1e6)
+
+    if (secs > 0) then
+        write(time_string, '(I0," s, ",I0," ms, ",I0," μs")') secs, msecs, usecs
+    else if (msecs > 0) then
+        write(time_string, '(I0," ms, ",I0," μs")') msecs, usecs
+    else
+        write(time_string, '(I0," μs")') usecs
+    end if
+
+    time_string = adjustl(time_string)
+  end function human_readable_time
 
 end program main

@@ -1,5 +1,5 @@
 FC = gfortran
-FCFLAGS = -Wall -Wextra -pedantic
+FCFLAGS = -Wall -Wextra -pedantic -O3
 BUILDDIR = build
 TARGET = betti
 #tell fortran where to search for mod files

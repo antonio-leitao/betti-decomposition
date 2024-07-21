@@ -63,7 +63,7 @@ contains
   end subroutine add_simplex
 
     subroutine boundary_matrix_rank(this, k, rank)
-      class(simplicial_complex), intent(in) :: this
+      class(simplicial_complex), intent(inout) :: this
       integer, intent(in) :: k
       integer, intent(out) :: rank
       integer :: m, n, i, j, l, face_index
@@ -117,6 +117,7 @@ contains
       n = this%dimensions(k-1)%num_elements
       call gaussian_elimination_f2(matrix, m, n, rank)
       deallocate(matrix)
+      call this%dimensions(k)%cleanup()
     end subroutine boundary_matrix_rank
 
 subroutine betti_numbers(this)
