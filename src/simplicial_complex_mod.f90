@@ -84,7 +84,6 @@ contains
       end if
 
       m = this%dimensions(k)%num_elements
-      n = this%dimensions(k-1)%num_elements
       
       allocate(matrix(m))
       allocate(temp_list(k-1))
@@ -115,15 +114,16 @@ contains
       end do
       ! Cleanup
       deallocate(temp_list)
+      n = this%dimensions(k-1)%num_elements
       call gaussian_elimination_f2(matrix, m, n, rank)
       deallocate(matrix)
-      print *, "Dimension: ",k, "Shape: ",m,n,"Rank: ",rank 
     end subroutine boundary_matrix_rank
 
 subroutine betti_numbers(this)
     class(simplicial_complex), intent(inout) :: this
-    integer :: i, K, rank_k, rank_k1
+    integer :: i, K, max_width
     integer, allocatable :: betti(:), ranks(:)
+    character(len=50) :: fmt_string
     
     allocate(betti(this%max_dim))
     allocate(ranks(this%max_dim))
@@ -140,9 +140,12 @@ subroutine betti_numbers(this)
         betti(i) = K - (ranks(i) + ranks(i+1))
     end do
 
-    ! Print Betti numbers
+    max_width = floor(log10(real(this%max_dim - 1))) + 1
+
+    write(fmt_string, '(A,I0,A)') '(A,I0,T', max_width + 3, ',A,1X,I0)'
+
     do i = 1, this%max_dim
-        print *, "b", i-1, " = ", betti(i)
+        write(*, fmt_string) 'b', i-1, '=', betti(i)
     end do
 
     deallocate(betti)
@@ -154,7 +157,7 @@ end subroutine betti_numbers
     class(simplicial_complex), intent(in) :: this
     integer :: i
 
-    do i = 0, this%max_dim
+    do i = 1, this%max_dim
       print *, "Dimension", i, ":"
       call this%dimensions(i)%print_list()
       print *, ""

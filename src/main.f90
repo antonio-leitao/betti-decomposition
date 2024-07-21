@@ -23,6 +23,7 @@ program main
   
   print *, "Reading from file:", trim(filename)
   sc = read_simplex_file(filename)
+  ! call sc%print_complex()
   call sc%betti_numbers()
   
   ! Print the simplicial complex

@@ -43,7 +43,7 @@ bench: $(TARGET)
 test: $(TARGET)
 	./$(TARGET) tests/1_sphere.txt
 	./$(TARGET) tests/5_sphere.txt
-	./$(TARGET) tests/10_sphere.txt
+	./$(TARGET) tests/9_sphere.txt
 	./$(TARGET) tests/example.txt
 
 .PHONY: all clean run bench
