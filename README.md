@@ -38,4 +38,16 @@ make
 ./betti "simplicial_complex.txt"
 ```
 
+### Adding paralelization
+
+
+# To Do
+
+[ ] - Use bit operations for matrix reduction.
+[ ] - Change input reading to support maximal simplicies instead of all simplicies.
+
+
+
+
+
 

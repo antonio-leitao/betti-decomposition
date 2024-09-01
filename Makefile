@@ -37,8 +37,10 @@ run: $(TARGET)
 clean:
 	rm -rf $(BUILDDIR) $(TARGET)
 
-bench: $(TARGET)
-	./$(TARGET) benchmarks/barabasi.txt
+bench:
+	@chmod +x tests/benchmark_script.sh
+	@./tests/benchmark_script.sh
+
 
 test: $(TARGET)
 	./$(TARGET) tests/1_sphere.txt

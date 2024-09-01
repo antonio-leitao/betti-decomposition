@@ -3,7 +3,7 @@ module sorted_list_mod
   private
   type, public :: sorted_list
     private
-    integer,public :: num_elements
+    integer,public :: num_elements !<-TODO fix this with encapsulation
     integer :: list_size
     integer :: element_size
     integer, allocatable, public :: data(:,:)
@@ -12,7 +12,6 @@ module sorted_list_mod
     procedure :: try_insert
     procedure :: initialize
     procedure :: cleanup
-    procedure :: print_list
   end type sorted_list
 contains
   subroutine initialize(this, element_size, initial_capacity)
@@ -94,17 +93,4 @@ contains
     if (allocated(this%data)) deallocate(this%data)
   end subroutine cleanup
 
-  subroutine print_list(this)
-    class(sorted_list), intent(in) :: this
-    integer :: i, j
-    print *, "List contents:"
-    do i = 1, this%num_elements
-      write(*, '(A,I0,A)', advance='no') "Element ", i, ": ("
-      do j = 1, this%element_size
-        write(*, '(I0)', advance='no') this%data(j, i)
-        if (j < this%element_size) write(*, '(A)', advance='no') ", "
-      end do
-      print *, ")"
-    end do
-  end subroutine print_list
 end module sorted_list_mod

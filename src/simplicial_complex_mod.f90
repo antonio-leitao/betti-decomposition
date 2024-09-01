@@ -8,13 +8,12 @@ module simplicial_complex_mod
   type, public :: simplicial_complex
     private
     type(sorted_list), allocatable :: dimensions(:)
-    integer :: max_dim
+    integer,public :: max_dim !<-TODO fix encapsulation!
   contains
     procedure :: initialize
     procedure :: add_simplex
     procedure :: boundary_matrix_rank
     procedure :: betti_numbers
-    procedure :: print_complex
   end type simplicial_complex
 
 contains
@@ -117,51 +116,41 @@ contains
       n = this%dimensions(k-1)%num_elements
       call gaussian_elimination_f2(matrix, m, n, rank)
       deallocate(matrix)
-      call this%dimensions(k)%cleanup()
+      ! call this%dimensions(k)%cleanup() <-this has to be toggeled for concurrency
     end subroutine boundary_matrix_rank
 
-subroutine betti_numbers(this)
-    class(simplicial_complex), intent(inout) :: this
-    integer :: i, K, max_width
-    integer, allocatable :: betti(:), ranks(:)
-    character(len=50) :: fmt_string
-    
-    allocate(betti(this%max_dim))
-    allocate(ranks(this%max_dim))
-    
-    ! Calculate ranks in descending order
-    ranks(1) = 0  ! By convention, rank of boundary map for 0-simplices is 0
-    do i = this%max_dim, 1, -1
-        call this%boundary_matrix_rank(i, ranks(i))
-    end do
-    
-    ! Calculate Betti numbers
-    do i = 1, this%max_dim
-        K = this%dimensions(i)%num_elements
-        betti(i) = K - (ranks(i) + ranks(i+1))
-    end do
+    subroutine betti_numbers(this, betti)
+        class(simplicial_complex), intent(inout) :: this
+        integer, intent(out) :: betti(:)  ! Betti numbers array passed as an argument
+        integer :: i, K, max_width
+        integer, allocatable :: ranks(:)
+        character(len=50) :: fmt_string
+        
+        ! Allocate ranks array based on max_dim
+        allocate(ranks(this%max_dim))
+        
+        ! Calculate ranks in descending order
+        ranks(1) = 0  ! By convention, rank of boundary map for 0-simplices is 0
+        do i = this%max_dim, 1, -1 !< This can be parallelizaed (and should)
+            call this%boundary_matrix_rank(i, ranks(i))
+        end do
+        
+        ! Calculate Betti numbers
+        do i = 1, this%max_dim
+            K = this%dimensions(i)%num_elements
+            betti(i) = K - (ranks(i) + ranks(i+1))
+        end do
 
-    max_width = floor(log10(real(this%max_dim - 1))) + 1
+        !! Prepare the format string
+        !max_width = floor(log10(real(this%max_dim - 1))) + 1
+        !write(fmt_string, '(A,I0,A)') '(A,I0,T', max_width + 3, ',A,1X,I0)'
+        !
+        !! Print Betti numbers
+        !do i = 1, this%max_dim
+        !    write(*, fmt_string) 'b', i-1, '=', betti(i)
+        !end do
 
-    write(fmt_string, '(A,I0,A)') '(A,I0,T', max_width + 3, ',A,1X,I0)'
-
-    do i = 1, this%max_dim
-        write(*, fmt_string) 'b', i-1, '=', betti(i)
-    end do
-
-    deallocate(betti)
-    deallocate(ranks)
-end subroutine betti_numbers
-  ! Helper functions
-
-  subroutine print_complex(this)
-    class(simplicial_complex), intent(in) :: this
-    integer :: i
-
-    do i = 1, this%max_dim
-      print *, "Dimension", i, ":"
-      call this%dimensions(i)%print_list()
-      print *, ""
-    end do
-  end subroutine print_complex
+        ! Deallocate the ranks array
+        deallocate(ranks)
+    end subroutine betti_numbers
 end module simplicial_complex_mod

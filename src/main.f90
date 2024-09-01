@@ -1,38 +1,49 @@
 program main
   use simplicial_complex_mod
-  use, intrinsic :: iso_fortran_env, only: error_unit
+  use utils_mod, only: parse_arguments
   implicit none
   type(simplicial_complex) :: sc
-  character(len=100) :: filename
+  character(len=100) :: filename,output
   integer :: num_args
+  integer,allocatable :: betti(:)
   real(kind=8) :: start_time, end_time, elapsed_time
+  logical :: time_flag
+
+  call parse_arguments(filename, output, time_flag)
 
   ! Check if a filename was provided as a command-line argument
   num_args = command_argument_count()
-  
-  if (num_args == 1) then
-    call get_command_argument(1, filename)
-  else if (num_args == 0) then
-    ! No argument provided, prompt user for filename
+
+  !if user didnt provide filename, ask for it
+  if (len_trim(filename) < 1) then
     print *, "Enter the filename containing simplices:"
     read *, filename
+  end if
+
+  ! CORE COMPUTATIONS
+  sc = read_simplex_file(filename)
+  allocate(betti(sc%max_dim))
+
+  call cpu_time(start_time)
+  call sc%betti_numbers(betti)
+  call cpu_time(end_time)
+  elapsed_time = end_time-start_time
+  if (time_flag) then
+      !print to console if user didnt provide
+      if (len_trim(output) > 0) then
+        print *, "  Printing time to file: ", trim(output)
+      else
+        print *, human_readable_time(elapsed_time)
+      end if
   else
-    ! Incorrect number of arguments
-    write(error_unit,*) "Usage: ./betti [filename]"
-    stop 1
+      !print to console if user didnt provide
+      if (len_trim(output) > 0) then
+        print *, "  Printing bettis to file: ", trim(output)
+      else
+          call print_betti_numbers(betti)
+      end if
   end if
   
-  print *, "Reading from file:", trim(filename)
-  sc = read_simplex_file(filename)
-  ! call sc%print_complex()
-  call cpu_time(start_time)
-  call sc%betti_numbers()
-  call cpu_time(end_time)
-
-  ! Calculate and print the elapsed time
-  print *, "----------"
-  elapsed_time = end_time-start_time
-  print *, "Elapsed time: ", human_readable_time(elapsed_time)
 contains
 
   function read_simplex_file(filename) result(sc)
@@ -40,12 +51,12 @@ contains
       character(len=*), intent(in) :: filename
       character(len=2000) :: line !has to be big for big simplices
       type(simplicial_complex) :: sc
-      integer :: i, n_vertices, max_dim
+      integer :: n_vertices, max_dim
       integer, dimension(:), allocatable :: simplex_count, simplex
       integer :: ios
-  
+
       open(unit=10, file=filename, status='old', action='read')
-  
+
       !!!! FIRST PASS GET THE NUMBER OF DIMENSIONS !!!
       max_dim = 0
       do
@@ -57,10 +68,9 @@ contains
             max_dim = n_vertices
           end if
       end do
-      print *, "MAX DIM: ", max_dim 
-  
+
       !!!! SECOND PASS GET THE N_SIMPLEXES PER DIMENSION !!!
-  
+
       rewind(10)
       allocate(simplex_count(max_dim))
       simplex_count=0
@@ -72,16 +82,12 @@ contains
   !increase the count of simplex_count
         simplex_count(n_vertices)=simplex_count(n_vertices) + 1
       end do
-      do i=1, size(simplex_count)
-        print *, i, ": ", simplex_count(i)
-      end do
-      
 
       !!!! THIRD PASS ALLOCATE THEM !!!
       rewind(10)
       call sc%initialize(max_dim,simplex_count) ! Initialize the simplicial complex
       deallocate(simplex_count)
-      
+
       do
         read(10, '(A)', iostat=ios) line
         if (ios /= 0) exit  ! Exit loop at the end of the file
@@ -98,10 +104,10 @@ contains
         deallocate(simplex)
       end do
       close(10)
-  
+
   end function read_simplex_file
 
-  
+
   integer function count_integers_in_line(line)
       implicit none
       character(len=*), intent(in) :: line
@@ -114,24 +120,35 @@ contains
       end do
   end function count_integers_in_line
 
-  function human_readable_time(seconds) result(time_string)
-    real(kind=8), intent(in) :: seconds  ! Using double precision for higher accuracy
-    character(len=50) :: time_string
-    integer :: secs, msecs, usecs
+    function human_readable_time(seconds) result(time_string)
+        real(kind=8), intent(in) :: seconds  ! Using double precision for higher accuracy
+        character(len=50) :: time_string
 
-    secs = int(seconds)
-    msecs = int((seconds - secs) * 1000)
-    usecs = nint((seconds - secs - msecs/1000.0) * 1e6)
+        ! Write the seconds with high precision (at least 8 significant figures)
+        write(time_string, '(F0.8)') seconds
 
-    if (secs > 0) then
-        write(time_string, '(I0," s, ",I0," ms, ",I0," μs")') secs, msecs, usecs
-    else if (msecs > 0) then
-        write(time_string, '(I0," ms, ",I0," μs")') msecs, usecs
-    else
-        write(time_string, '(I0," μs")') usecs
-    end if
+        ! Remove any leading spaces that might result from the formatting
+        time_string = adjustl(time_string)
+    end function human_readable_time
 
-    time_string = adjustl(time_string)
-  end function human_readable_time
+
+subroutine print_betti_numbers(betti)
+    integer, intent(in) :: betti(:)  ! Betti numbers array passed as an argument
+    integer :: i, max_dim, max_width
+    character(len=50) :: fmt_string
+
+    ! Get the length of the betti array, which is max_dim
+    max_dim = size(betti)
+
+    ! Prepare the format string
+    max_width = floor(log10(real(max_dim - 1))) + 1
+    write(fmt_string, '(A,I0,A)') '(A,I0,T', max_width + 3, ',A,1X,I0)'
+
+    ! Print Betti numbers
+    do i = 1, max_dim
+        write(*, fmt_string) 'b', i-1, '=', betti(i)
+    end do
+end subroutine print_betti_numbers
 
 end program main
+
