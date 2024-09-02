@@ -116,7 +116,10 @@ contains
       n = this%dimensions(k - 1)%num_elements
       call gaussian_elimination_f2(matrix, m, n, rank)
       deallocate (matrix)
-      ! call this%dimensions(k)%cleanup() <-Cannot have this on for concurrency
+#ifndef _OPENMP
+      call this%dimensions(k)%cleanup()
+#endif
+
    end subroutine boundary_matrix_rank
 
    subroutine betti_numbers(this, betti)
@@ -130,13 +133,16 @@ contains
       ranks(1) = 0  ! By convention, rank of boundary map for 0-simplices is 0
       ! Check if OpenMP parallelization is defined
 #ifdef _OPENMP
-      print *, "OPENMP enabled"
-#endif
+      !$OMP PARALLEL DO
       do i = 1, this%max_dim
-         !do i = this%max_dim, 1, -1 !< This can be parallelizaed (and should)
          call this%boundary_matrix_rank(i, ranks(i))
       end do
-
+      !$OMP END PARALLEL DO
+#else
+      do i = this%max_dim, 1, -1 !< Go on reverse in sequential
+         call this%boundary_matrix_rank(i, ranks(i))
+      end do
+#endif
       ! Calculate Betti numbers
       do i = 1, this%max_dim
          K = this%dimensions(i)%num_elements
