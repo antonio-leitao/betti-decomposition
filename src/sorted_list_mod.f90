@@ -1,96 +1,96 @@
 module sorted_list_mod
-  implicit none
-  private
-  type, public :: sorted_list
-    private
-    integer,public :: num_elements !<-TODO fix this with encapsulation
-    integer :: list_size
-    integer :: element_size
-    integer, allocatable, public :: data(:,:)
-  contains
-    procedure :: binary_search
-    procedure :: try_insert
-    procedure :: initialize
-    procedure :: cleanup
-  end type sorted_list
+   implicit none
+   private
+   type, public :: sorted_list
+      private
+      integer, public :: num_elements !<-TODO fix this with encapsulation
+      integer :: list_size
+      integer :: element_size
+      integer, allocatable, public :: data(:, :) !< TODO fix this man
+   contains
+      procedure :: binary_search
+      procedure :: try_insert
+      procedure :: initialize
+      procedure :: cleanup
+   end type sorted_list
 contains
-  subroutine initialize(this, element_size, initial_capacity)
-    class(sorted_list), intent(inout) :: this
-    integer, intent(in) :: element_size
-    integer, intent(in) :: initial_capacity
-    this%num_elements = 0
-    this%list_size = initial_capacity
-    this%element_size = element_size
-    allocate(this%data(element_size, initial_capacity))
-  end subroutine initialize
+   subroutine initialize(this, element_size, initial_capacity)
+      class(sorted_list), intent(inout) :: this
+      integer, intent(in) :: element_size
+      integer, intent(in) :: initial_capacity
+      this%num_elements = 0
+      this%list_size = initial_capacity
+      this%element_size = element_size
+      allocate (this%data(element_size, initial_capacity))
+   end subroutine initialize
 
-  function binary_search(this, element, found) result(index)
-    class(sorted_list), intent(in) :: this
-    integer, intent(in) :: element(this%element_size)
-    logical, intent(out) :: found
-    integer :: index
-    integer :: low, high, mid
-    integer :: i
+   function binary_search(this, element, found) result(index)
+      class(sorted_list), intent(in) :: this
+      integer, intent(in) :: element(this%element_size)
+      logical, intent(out) :: found
+      integer :: index
+      integer :: low, high, mid
+      integer :: i
 
-    low = 1
-    high = this%num_elements
-    found = .false.
+      low = 1
+      high = this%num_elements
+      found = .false.
 
-    do while (low <= high)
-      mid = (low + high) / 2
+      do while (low <= high)
+         mid = (low + high)/2
 
-      do i = 1, this%element_size
-        if (this%data(i, mid) < element(i)) then
-          low = mid + 1
-          exit
-        else if (this%data(i, mid) > element(i)) then
-          high = mid - 1
-          exit
-        else if (i == this%element_size) then
-          found = .true.
-          index = mid
-          return
-        end if
+         do i = 1, this%element_size
+            if (this%data(i, mid) < element(i)) then
+               low = mid + 1
+               exit
+            else if (this%data(i, mid) > element(i)) then
+               high = mid - 1
+               exit
+            else if (i == this%element_size) then
+               found = .true.
+               index = mid
+               return
+            end if
+         end do
       end do
-    end do
 
-    index = low
-  end function binary_search
+      index = low
+   end function binary_search
 
-  function try_insert(this, element) result(status)
-    class(sorted_list), intent(inout) :: this
-    integer, intent(in) :: element(this%element_size)
-    integer :: status
-    logical :: found
-    integer :: index, i
+   function try_insert(this, element) result(status)
+      class(sorted_list), intent(inout) :: this
+      integer, intent(in) :: element(this%element_size)
+      integer :: status
+      logical :: found
+      integer :: index, i
 
-    index = this%binary_search(element, found)
+      index = this%binary_search(element, found)
 
-    if (found) then
-      status = 2  ! Element already exists
-      return
-    end if
+      if (found) then
+         status = 2  ! Element already exists
+         return
+      end if
 
-    if (this%num_elements == this%list_size) then
-      status = 1  ! Error: List is full
-      return
-    end if
+      if (this%num_elements == this%list_size) then
+         status = 1  ! Error: List is full
+         return
+      end if
 
-    ! Shift elements to make space for the new element
-    do i = this%num_elements, index, -1
-      this%data(:, i+1) = this%data(:, i)
-    end do
+      ! Shift elements to make space for the new element
+      do i = this%num_elements, index, -1
+         this%data(:, i + 1) = this%data(:, i)
+      end do
 
-    ! Insert the new element
-    this%data(:, index) = element
-    this%num_elements = this%num_elements + 1
-    status = 0  ! Successfully inserted
-  end function try_insert
+      ! Insert the new element
+      this%data(:, index) = element
+      this%num_elements = this%num_elements + 1
+      status = 0  ! Successfully inserted
+   end function try_insert
 
-  !HELPER STUFF
-  subroutine cleanup(this)
-    class(sorted_list), intent(inout) :: this
-    if (allocated(this%data)) deallocate(this%data)
-  end subroutine cleanup
+   !HELPER STUFF
+   subroutine cleanup(this)
+      class(sorted_list), intent(inout) :: this
+      if (allocated(this%data)) deallocate (this%data)
+   end subroutine cleanup
 
 end module sorted_list_mod

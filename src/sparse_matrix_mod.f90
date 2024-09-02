@@ -1,117 +1,117 @@
 module sparse_matrix_mod
-  implicit none
-  private
-  public :: sparse_row, gaussian_elimination_f2
+   implicit none
+   private
+   public :: sparse_row, gaussian_elimination_f2
 
-  type sparse_row
-     integer, allocatable :: indices(:)
-  end type sparse_row
+   type sparse_row
+      integer, allocatable :: indices(:)
+   end type sparse_row
 
 contains
 
-  subroutine gaussian_elimination_f2(matrix, m, n, rank)
-    type(sparse_row), intent(inout) :: matrix(:)
-    integer, intent(in) :: m, n
-    integer, intent(out) :: rank
-    
-    integer :: h, k, i, pivot_row
-    logical :: found_pivot
-    
-    h = 1  ! Current pivot row
-    k = 1  ! Current pivot column
-    rank = 0
+   subroutine gaussian_elimination_f2(matrix, m, n, rank)
+      type(sparse_row), intent(inout) :: matrix(:)
+      integer, intent(in) :: m, n
+      integer, intent(out) :: rank
 
-    do while (h <= m .and. k <= n)
-       ! Find pivot
-       found_pivot = .false.
-       do i = h, m
-          if (any(matrix(i)%indices == k)) then
-             pivot_row = i
-             found_pivot = .true.
-             exit
-          end if
-       end do
+      integer :: h, k, i, pivot_row
+      logical :: found_pivot
 
-       if (.not. found_pivot) then
-          ! No pivot in this column, move to next
-          k = k + 1
-          cycle
-       end if
+      h = 1  ! Current pivot row
+      k = 1  ! Current pivot column
+      rank = 0
 
-       ! Swap pivot row with current row if necessary
-       if (pivot_row /= h) then
-          call swap_rows(matrix(h), matrix(pivot_row))
-       end if
+      do while (h <= m .and. k <= n)
+         ! Find pivot
+         found_pivot = .false.
+         do i = h, m
+            if (any(matrix(i)%indices == k)) then
+               pivot_row = i
+               found_pivot = .true.
+               exit
+            end if
+         end do
 
-       ! XOR operations for rows below pivot
-       do i = h + 1, m
-          if (any(matrix(i)%indices == k)) then
-             call xor_rows(matrix(i), matrix(h))
-          end if
-       end do
+         if (.not. found_pivot) then
+            ! No pivot in this column, move to next
+            k = k + 1
+            cycle
+         end if
 
-       rank = rank + 1
-       h = h + 1
-       k = k + 1
-    end do
-  end subroutine gaussian_elimination_f2
+         ! Swap pivot row with current row if necessary
+         if (pivot_row /= h) then
+            call swap_rows(matrix(h), matrix(pivot_row))
+         end if
 
-  subroutine swap_rows(row1, row2)
-    type(sparse_row), intent(inout) :: row1, row2
-    type(sparse_row) :: temp
+         ! XOR operations for rows below pivot
+         do i = h + 1, m
+            if (any(matrix(i)%indices == k)) then
+               call xor_rows(matrix(i), matrix(h))
+            end if
+         end do
 
-    temp = row1
-    row1 = row2
-    row2 = temp
-  end subroutine swap_rows
+         rank = rank + 1
+         h = h + 1
+         k = k + 1
+      end do
+   end subroutine gaussian_elimination_f2
 
-  subroutine xor_rows(row1, row2)
-    type(sparse_row), intent(inout) :: row1
-    type(sparse_row), intent(in) :: row2
-    
-    integer, allocatable :: result(:)
-    integer :: i, j, k, n1, n2
+   subroutine swap_rows(row1, row2)
+      type(sparse_row), intent(inout) :: row1, row2
+      type(sparse_row) :: temp
 
-    n1 = size(row1%indices)
-    n2 = size(row2%indices)
-    allocate(result(n1 + n2))
+      temp = row1
+      row1 = row2
+      row2 = temp
+   end subroutine swap_rows
 
-    i = 1
-    j = 1
-    k = 1
+   subroutine xor_rows(row1, row2)
+      type(sparse_row), intent(inout) :: row1
+      type(sparse_row), intent(in) :: row2
 
-    do while (i <= n1 .and. j <= n2)
-       if (row1%indices(i) < row2%indices(j)) then
-          result(k) = row1%indices(i)
-          i = i + 1
-       else if (row1%indices(i) > row2%indices(j)) then
-          result(k) = row2%indices(j)
-          j = j + 1
-       else  ! Equal indices, they cancel out in XOR
-          i = i + 1
-          j = j + 1
-          cycle
-       end if
-       k = k + 1
-    end do
+      integer, allocatable :: result(:)
+      integer :: i, j, k, n1, n2
 
-    ! Add remaining elements
-    do while (i <= n1)
-       result(k) = row1%indices(i)
-       i = i + 1
-       k = k + 1
-    end do
+      n1 = size(row1%indices)
+      n2 = size(row2%indices)
+      allocate (result(n1 + n2))
 
-    do while (j <= n2)
-       result(k) = row2%indices(j)
-       j = j + 1
-       k = k + 1
-    end do
+      i = 1
+      j = 1
+      k = 1
 
-    ! Resize result to actual size
-    deallocate(row1%indices)
-    allocate(row1%indices(k-1))
-    row1%indices = result(:k-1)
-  end subroutine xor_rows
+      do while (i <= n1 .and. j <= n2)
+         if (row1%indices(i) < row2%indices(j)) then
+            result(k) = row1%indices(i)
+            i = i + 1
+         else if (row1%indices(i) > row2%indices(j)) then
+            result(k) = row2%indices(j)
+            j = j + 1
+         else  ! Equal indices, they cancel out in XOR
+            i = i + 1
+            j = j + 1
+            cycle
+         end if
+         k = k + 1
+      end do
+
+      ! Add remaining elements
+      do while (i <= n1)
+         result(k) = row1%indices(i)
+         i = i + 1
+         k = k + 1
+      end do
+
+      do while (j <= n2)
+         result(k) = row2%indices(j)
+         j = j + 1
+         k = k + 1
+      end do
+
+      ! Resize result to actual size
+      deallocate (row1%indices)
+      allocate (row1%indices(k - 1))
+      row1%indices = result(:k - 1)
+   end subroutine xor_rows
 
 end module sparse_matrix_mod

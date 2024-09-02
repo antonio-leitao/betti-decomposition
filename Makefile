@@ -1,7 +1,11 @@
 FC = gfortran
-FCFLAGS = -Wall -Wextra -pedantic -O3
+OPTLEVEL ?= -O3
+FCFLAGS = -Wall -Wextra -pedantic -cpp $(OPTLEVEL) #cpp for the preprocessing steps (OpenMP directives)
 BUILDDIR = build
 TARGET = betti
+ifdef OPENMP
+    FCFLAGS += -fopenmp
+endif
 #tell fortran where to search for mod files
 FCFLAGS += -J$(BUILDDIR) 
 
@@ -37,15 +41,23 @@ run: $(TARGET)
 clean:
 	rm -rf $(BUILDDIR) $(TARGET)
 
+
 bench:
 	@chmod +x tests/benchmark_script.sh
-	@./tests/benchmark_script.sh
+	@$(MAKE) clean
+	@$(MAKE) "OPTLEVEL=-O1"
+	@./tests/benchmark_script.sh data/sequential_opt1.csv
+	@$(MAKE) clean
+	@$(MAKE) "OPTLEVEL=-O1"
+	@./tests/benchmark_script.sh data/sequential_opt2.csv
+	@$(MAKE) clean
+	@$(MAKE) "OPTLEVEL=-O3"
+	@./tests/benchmark_script.sh data/sequential_opt3.csv
 
 
 test: $(TARGET)
 	./$(TARGET) tests/1_sphere.txt
 	./$(TARGET) tests/5_sphere.txt
 	./$(TARGET) tests/9_sphere.txt
-	./$(TARGET) tests/example.txt
 
 .PHONY: all clean run bench

@@ -1,7 +1,12 @@
 #!/bin/bash
+# Check if an argument is provided
+if [ $# -eq 0 ]; then
+    echo "Usage: $0 <output_csv_file>"
+    exit 1
+fi
 
-# Output CSV file
-output_file="tests/results.csv"
+# Output CSV file from the argument
+output_file="$1"
 
 # Create CSV header
 echo "filename,n_simplicies,time" > "$output_file"
