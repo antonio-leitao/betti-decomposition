@@ -53,6 +53,15 @@ bench:
 	@$(MAKE) clean
 	@$(MAKE) "OPTLEVEL=-O3"
 	@./tests/benchmark_script.sh data/sequential_opt3.csv
+	@$(MAKE) clean
+	@$(MAKE) "OPENMP=1" "OPTLEVEL=-O1"
+	@./tests/benchmark_script.sh data/parallel_opt1.csv
+	@$(MAKE) clean
+	@$(MAKE) "OPENMP=1" "OPTLEVEL=-O1"
+	@./tests/benchmark_script.sh data/parallel_opt2.csv
+	@$(MAKE) clean
+	@$(MAKE) "OPENMP=1" "OPTLEVEL=-O3"
+	@./tests/benchmark_script.sh data/parallel_opt3.csv
 
 
 test: $(TARGET)

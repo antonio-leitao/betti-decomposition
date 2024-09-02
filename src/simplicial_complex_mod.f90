@@ -86,10 +86,13 @@ contains
 
       allocate (matrix(m))
       allocate (temp_list(k - 1))
+      !initialize outside loop
+      do i = 1, m
+         allocate (matrix(i)%indices(k))
+      end do
 
 !$OMP PARALLEL DO PRIVATE(i, j, l, face_index, found, temp_list) SHARED(matrix, m)
       do i = 1, m
-         allocate (matrix(i)%indices(k))
         !! BOUNDARY OPERATOR LOOP
          do j = 1, k
             l = 0
@@ -118,7 +121,7 @@ contains
       n = this%dimensions(k - 1)%num_elements
       call gaussian_elimination_f2(matrix, m, n, rank)
       deallocate (matrix)
-        call this%dimensions(k)%cleanup() !<- deallocate bigger matrix
+      call this%dimensions(k)%cleanup() !<- deallocate bigger matrix
 
    end subroutine boundary_matrix_rank
 

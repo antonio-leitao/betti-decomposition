@@ -1,0 +1,18 @@
+filename,n_simplicies,time
+01_sphere.txt,       5, .00027100                                         
+02_sphere.txt,      13, .00069100                                         
+03_sphere.txt,      29, .00059000                                         
+04_sphere.txt,      61, .00098600                                         
+05_sphere.txt,     125, .00105600                                         
+06_sphere.txt,     253, .00103900                                         
+07_sphere.txt,     509, .00180000                                         
+08_sphere.txt,    1021, .00226200                                         
+09_sphere.txt,    2045, .00523200                                         
+10_sphere.txt,    4093, .01323000                                         
+11_sphere.txt,    8189, .04139900                                         
+12_sphere.txt,   16381, .14954900                                         
+13_sphere.txt,   32765, .54343500                                         
+14_sphere.txt,   65533, 2.04458900                                        
+15_sphere.txt,  131069, 7.94080500                                        
+16_sphere.txt,  262141, 31.34582500                                       
+17_sphere.txt,  524285, 128.37527700                                      

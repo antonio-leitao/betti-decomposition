@@ -38,7 +38,7 @@ program main
    else
       !print to console if user didnt provide
       if (len_trim(output) > 0) then
-         print *, "  Printing bettis to file: ", trim(output)
+         call print_betti_numbers(betti, trim(output))
       else
          call print_betti_numbers(betti)
       end if
@@ -130,22 +130,30 @@ contains
       time_string = adjustl(time_string)
    end function human_readable_time
 
-   subroutine print_betti_numbers(betti)
+   subroutine print_betti_numbers(betti, filename)
       integer, intent(in) :: betti(:)  ! Betti numbers array passed as an argument
-      integer :: i, max_dim, max_width
+      character(len=*), optional, intent(in) :: filename
+      integer :: i, max_dim, max_width, unit
       character(len=50) :: fmt_string
 
-      ! Get the length of the betti array, which is max_dim
       max_dim = size(betti)
 
-      ! Prepare the format string
+      ! only God knows how this works now, because I've forgotten
       max_width = floor(log10(real(max_dim - 1))) + 1
       write (fmt_string, '(A,I0,A)') '(A,I0,T', max_width + 3, ',A,1X,I0)'
 
-      ! Print Betti numbers
-      do i = 1, max_dim
-         write (*, fmt_string) 'b', i - 1, '=', betti(i)
-      end do
+      if (present(filename)) then
+         open (newunit=unit, file=filename, status='replace') !<-maybe add some check for err
+         do i = 1, max_dim
+            write (unit, fmt_string) 'b', i - 1, '=', betti(i)
+         end do
+         close (unit)
+      else
+         ! Print Betti numbers to the console
+         do i = 1, max_dim
+            write (*, fmt_string) 'b', i - 1, '=', betti(i)
+         end do
+      end if
    end subroutine print_betti_numbers
 
 end program main

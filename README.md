@@ -20,11 +20,8 @@ complex.txt
 The code returns the following output
 
 ```text
-output.txt
   b0 = 1
   b1 = 1
-  ------
-  Execution time: 12ms
 ```
 
 ## Basic usage
@@ -38,14 +35,13 @@ make
 ./betti "simplicial_complex.txt"
 ```
 
-### Adding paralelization
+### Compiler Options
 
+To toogle parallelization with OpenMP compile with teh following code
 
-# To Do
-
-[ ] - Use bit operations for matrix reduction.
-[ ] - Change input reading to support maximal simplicies instead of all simplicies.
-
+```shell
+make OPENMP=1
+```
 
 
 
