@@ -73,7 +73,7 @@ contains
       if (k < 0 .or. k > this%max_dim) then
          print *, "Error: Invalid dimension k =", k
          rank = -1  ! Indicate error
-         return
+         stop "STOPED: Invalid Dimension"
       end if
 
       ! Convention for 0-dimensional boundary map
@@ -87,6 +87,7 @@ contains
       allocate (matrix(m))
       allocate (temp_list(k - 1))
 
+!$OMP PARALLEL DO PRIVATE(i, j, l, face_index, found, temp_list) SHARED(matrix, m)
       do i = 1, m
          allocate (matrix(i)%indices(k))
         !! BOUNDARY OPERATOR LOOP
@@ -111,14 +112,13 @@ contains
          end do
          ! print *, "boundary: ", matrix(i)%indices
       end do
+!$OMP END PARALLEL DO
       ! Cleanup
       deallocate (temp_list)
       n = this%dimensions(k - 1)%num_elements
       call gaussian_elimination_f2(matrix, m, n, rank)
       deallocate (matrix)
-#ifndef _OPENMP
-      call this%dimensions(k)%cleanup()
-#endif
+        call this%dimensions(k)%cleanup() !<- deallocate bigger matrix
 
    end subroutine boundary_matrix_rank
 
@@ -132,17 +132,9 @@ contains
       allocate (ranks(this%max_dim))
       ranks(1) = 0  ! By convention, rank of boundary map for 0-simplices is 0
       ! Check if OpenMP parallelization is defined
-#ifdef _OPENMP
-      !$OMP PARALLEL DO
-      do i = 1, this%max_dim
-         call this%boundary_matrix_rank(i, ranks(i))
-      end do
-      !$OMP END PARALLEL DO
-#else
       do i = this%max_dim, 1, -1 !< Go on reverse in sequential
          call this%boundary_matrix_rank(i, ranks(i))
       end do
-#endif
       ! Calculate Betti numbers
       do i = 1, this%max_dim
          K = this%dimensions(i)%num_elements
