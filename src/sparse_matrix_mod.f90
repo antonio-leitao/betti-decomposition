@@ -43,7 +43,8 @@ contains
             call swap_rows(matrix(h), matrix(pivot_row))
          end if
 
-         ! XOR operations for rows below pivot
+         ! XOR operations for rows below pivot_row
+         ! tried parallelizeing this but to no avail, rust speedup is massive here
          do i = h + 1, m
             if (any(matrix(i)%indices == k)) then
                call xor_rows(matrix(i), matrix(h))
